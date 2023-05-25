@@ -1,0 +1,308 @@
+import java.util.ArrayList;
+import java.util.List;
+
+class Bank {
+    private String name;
+    private List<Customer> customers;
+    private List<Loan> loans;
+
+    public Bank(String name) {
+        this.name = name;
+        this.customers = new ArrayList<>();
+        this.loans = new ArrayList<>();
+    }
+
+    public void addCustomer(Customer customer) {
+        customers.add(customer);
+    }
+
+    public List<Customer> getCustomers() {
+        return customers;
+    }
+
+    public void addLoan(Loan loan) {
+        loans.add(loan);
+    }
+
+    public List<Loan> getLoans() {
+        return loans;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void transferFunds(Customer sender, Customer receiver, double amount) {
+        if (sender.getBalance() >= amount) {
+            sender.withdraw(amount);
+            receiver.deposit(amount);
+            System.out.println("Transfer successful");
+        } else {
+            System.out.println("Insufficient funds for transfer");
+        }
+    }
+
+    public void applyForLoan(Customer customer, double amount) {
+        Loan loan = new Loan(customer, amount);
+        loans.add(loan);
+        System.out.println("Loan application submitted");
+    }
+
+    public void processLoans() {
+        for (Loan loan : loans) {
+            if (loan.getStatus() == LoanStatus.PENDING) {
+                if (loan.getCustomer().getCreditScore() >= 600) {
+                    loan.approve();
+                    System.out.println("Loan approved for " + loan.getCustomer().getName());
+                } else {
+                    loan.reject();
+                    System.out.println("Loan rejected for " + loan.getCustomer().getName());
+                }
+            }
+        }
+    }
+
+    public boolean authenticateCustomer(String username, String password) {
+        for (Customer customer : customers) {
+            if (customer.getUsername().equals(username) && customer.getPassword().equals(password)) {
+                return true;
+            }
+        }
+        return false;
+    }
+}
+
+abstract class Account {
+    protected String accountNumber;
+    protected double balance;
+
+    public Account(String accountNumber, double balance) {
+        this.accountNumber = accountNumber;
+        this.balance = balance;
+    }
+
+    public String getAccountNumber() {
+        return accountNumber;
+    }
+
+    public double getBalance() {
+        return balance;
+    }
+
+    public void deposit(double amount) {
+        balance += amount;
+    }
+
+    public abstract void withdraw(double amount);
+}
+
+class SavingsAccount extends Account {
+    private double interestRate;
+
+    public SavingsAccount(String accountNumber, double balance, double interestRate) {
+        super(accountNumber, balance);
+        this.interestRate = interestRate;
+    }
+
+    public double getInterestRate() {
+        return interestRate;
+    }
+
+    public void setInterestRate(double interestRate) {
+        this.interestRate = interestRate;
+    }
+
+    @Override
+    public void withdraw(double amount) {
+        if (balance >= amount) {
+            balance -= amount;
+        } else {
+            System.out.println("Insufficient funds");
+        }
+    }
+}
+
+class CheckingAccount extends Account {
+    private double overdraftLimit;
+
+    public CheckingAccount(String accountNumber, double balance, double overdraftLimit) {
+        super(accountNumber, balance);
+        this.overdraftLimit = overdraftLimit;
+    }
+
+    public double getOverdraftLimit() {
+        return overdraftLimit;
+    }
+
+    public void setOverdraftLimit(double overdraftLimit) {
+        this.overdraftLimit = overdraftLimit;
+    }
+
+    @Override
+    public void withdraw(double amount) {
+        if (balance + overdraftLimit >= amount) {
+            balance -= amount;
+        } else {
+            System.out.println("Insufficient funds");
+        }
+    }
+}
+
+class Loan {
+    private Customer customer;
+    private double amount;
+    private LoanStatus status;
+
+    public Loan(Customer customer, double amount) {
+        this.customer = customer;
+        this.amount = amount;
+        this.status = LoanStatus.PENDING;
+    }
+
+    public Customer getCustomer() {
+        return customer;
+    }
+
+    public double getAmount() {
+        return amount;
+    }
+
+    public LoanStatus getStatus() {
+        return status;
+    }
+
+    public void approve() {
+        status = LoanStatus.APPROVED;
+    }
+
+    public void reject() {
+        status = LoanStatus.REJECTED;
+    }
+}
+
+enum LoanStatus {
+    PENDING,
+    APPROVED,
+    REJECTED
+}
+
+class Customer {
+    private String name;
+    private String accountNumber;
+    private String username;
+    private String password;
+    private double balance;
+    private int creditScore;
+    private List<Account> accounts;
+
+    public Customer(String name, String accountNumber, String username, String password, double balance, int creditScore) {
+        this.name = name;
+        this.accountNumber = accountNumber;
+        this.username = username;
+        this.password = password;
+        this.balance = balance;
+        this.creditScore = creditScore;
+        this.accounts = new ArrayList<>();
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getAccountNumber() {
+        return accountNumber;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public double getBalance() {
+        return balance;
+    }
+
+    public int getCreditScore() {
+        return creditScore;
+    }
+
+    public List<Account> getAccounts() {
+        return accounts;
+    }
+
+    public void addAccount(Account account) {
+        accounts.add(account);
+    }
+
+    public void withdraw(double amount) {
+        if (balance >= amount) {
+            balance -= amount;
+        } else {
+            System.out.println("Insufficient funds");
+        }
+    }
+
+    public void deposit(double amount) {
+        balance += amount;
+    }
+}
+
+public class OnlineBankManagementSystem {
+    public static void main(String[] args) {
+        Bank bank = new Bank("MyBank");
+
+        // Dodawanie klientów do banku
+        Customer customer1 = new Customer("John Smith", "123456789", "johnsmith", "password123", 1000.0, 650);
+        Customer customer2 = new Customer("Alice Johnson", "987654321", "alicejohnson", "abc123", 500.0, 720);
+
+        // Tworzenie różnych typów kont
+        Account account1 = new SavingsAccount("S123456789", 1000.0, 0.05);
+        Account account2 = new CheckingAccount("C987654321", 500.0, 100.0);
+
+        // Przypisanie kont do klientów
+        customer1.addAccount(account1);
+        customer2.addAccount(account2);
+
+        bank.addCustomer(customer1);
+        bank.addCustomer(customer2);
+
+        // Wyświetlanie informacji o klientach i kontach
+        List<Customer> customers = bank.getCustomers();
+        for (Customer customer : customers) {
+            System.out.println("Customer: " + customer.getName());
+            System.out.println("Accounts:");
+            List<Account> accounts = customer.getAccounts();
+            for (Account account : accounts) {
+                System.out.println("Account Number: " + account.getAccountNumber());
+                System.out.println("Balance: $" + account.getBalance());
+                System.out.println();
+            }
+        }
+
+        // Przykład przekazania środków między klientami
+        Customer sender = customers.get(0);
+        Customer receiver = customers.get(1);
+        double transferAmount = 200.0;
+        bank.transferFunds(sender, receiver, transferAmount);
+
+        // Przykład aplikowania o kredyt
+        Customer loanApplicant = customers.get(0);
+        double loanAmount = 5000.0;
+        bank.applyForLoan(loanApplicant, loanAmount);
+
+        // Przetwarzanie wniosków kredytowych
+        bank.processLoans();
+
+        // Wygenerowanie raportu
+        bank.generateReport();
+
+        // Uwierzytelnianie klienta
+        String username = "johnsmith";
+        String password = "password123";
+        boolean isAuthenticated = bank.authenticateCustomer(username, password);
+        System.out.println("Authentication: " + (isAuthenticated ? "Successful" : "Failed"));
+    }
+}
